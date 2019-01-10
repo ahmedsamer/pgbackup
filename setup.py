@@ -11,5 +11,11 @@ setup(
     author='Ahmed Samir',
     author_email='ahmed.samer@gmail.com',
     packages=find_packages('src'),
-    package_dir={'': 'src'}
+    package_dir={'': 'src'},
+    install_requires=['boto3'],
+    entry_points={
+        'console_scripts': [
+            'pgbackup=pgbackup.cli:main',
+        ],
+    }
 )
