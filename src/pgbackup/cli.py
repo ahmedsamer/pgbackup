@@ -15,15 +15,17 @@ class DriverAction(Action):
 def create_parser():
     parser = ArgumentParser()
     parser.add_argument('url', help='url of the postgres database')
-    parser.add_argument('--driver',
+    parser.add_argument('--driver', '-d',
                         help='How and where to store your backup',
                         nargs=2,
                         action=DriverAction,
+                        metavar=('driver', 'destination'),
                         required=True)
     return parser
 
 
 def main():
+    import time
     import boto3
     from pgbackup import pgdump, storage
 
@@ -31,7 +33,11 @@ def main():
     dump = pgdump.dump(args.url)
     if args.driver == 's3':
         client = boto3.client('s3')
-        storage.s3(client, dump.stdout, args.destination, 'example.sql')
+        timestamp = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
+        file_name = pgdump.dump_file_name(args.url, timestamp)
+        print(f"Backing database to {args.destination} in S3 as {file_name}")
+        storage.s3(client, dump.stdout, args.destination, file_name)
     else:
         outfile = open(args.destination, 'wb')
+        print(f"Backing database up locally to {args.destination}")
         storage.local(dump.stdout, outfile)
